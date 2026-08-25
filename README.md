@@ -1,4 +1,4 @@
-# Hermitage v0.6.0
+# Hermitage v0.6.1
 
 Hermitage is a modern self-hosted web frontend for Navidrome/OpenSubsonic. It runs separately from Navidrome and communicates with the music server through the Subsonic/OpenSubsonic API.
 
@@ -6,31 +6,32 @@ The interface is built around a desktop music-library workflow: artwork-driven t
 
 Navidrome remains responsible for the library, metadata, accounts, scanning, streaming and transcoding. Hermitage is the client/UI layer.
 
+## v0.6.1 performance changes
+
+v0.6.1 is a remote-playback performance and polish release ahead of Community Apps submission.
+
+- Artwork cache misses now **stream to the browser immediately** instead of waiting for the entire Navidrome image response to buffer in memory first.
+- `X-Accel-Buffering: no` is emitted for artwork responses so reverse proxies such as NGINX Proxy Manager do not hold the first image bytes unnecessarily.
+- Persistent artwork cache under `/data/cover-cache`, retained across container restarts and upgrades.
+- Concurrent requests for the same artwork rendition are coalesced into one Navidrome resize/fetch.
+- Artwork requests use a small set of size buckets, substantially reducing repeated resizing of the same cover at near-identical dimensions.
+- Synced lyrics use a local high-frequency playback clock while visible instead of relying only on the browser's relatively coarse `timeupdate` event.
+- Added an adjustable **Lyrics timing offset** in Settings (`-2000` to `+2000` ms). Negative values display lyrics earlier.
+- Corrected the fullscreen synced-lyrics offset calculation to match the normal Now Playing lyrics panel.
+- When secure cookies are enabled, direct HTTP LAN access can still establish its own non-Secure host-local session for diagnostics; HTTPS reverse-proxy sessions remain Secure.
+
+All v0.6.0 release hardening and v0.5.1 application features are retained.
+
 ## v0.6.0 release-candidate changes
 
-v0.6.0 is primarily a packaging and deployment-hardening release rather than another large UI feature release.
-
-- Optional **single-server mode** using `HERMITAGE_DEFAULT_SERVER_URL` and `HERMITAGE_LOCK_SERVER_URL`.
-- `/api/config` deployment metadata endpoint and expanded `/api/health` endpoint.
-- Docker health check.
-- Per-client login attempt rate limiting.
-- Configurable reverse-proxy trust through `HERMITAGE_TRUST_PROXY`.
-- Baseline HTTP security headers.
-- React error boundary and operating-system reduced-motion support.
-- About/connection information in Settings.
-- GitHub Actions CI.
-- Automatic multi-architecture GHCR publishing for `linux/amd64` and `linux/arm64` when a version tag is pushed.
-- Unraid Community Apps starter metadata/template.
-- MIT licence, security policy, contribution guide and changelog.
-
-All v0.5.1 application features are retained.
+v0.6.0 introduced single-server deployments, health checks, login rate limiting, CI/GHCR publishing, the Unraid template and general deployment hardening.
 
 ## Quick start — local Docker build
 
 ```bash
 git clone https://github.com/FenrisSkoll/hermitage.git
 cd hermitage
-docker build -t hermitage:0.6.0 .
+docker build -t hermitage:0.6.1 .
 
 docker run -d \
   --name hermitage \
@@ -40,8 +41,9 @@ docker run -d \
   -e HERMITAGE_DEFAULT_SERVER_URL=http://192.168.1.50:4533 \
   -e HERMITAGE_LOCK_SERVER_URL=true \
   -e HERMITAGE_ALLOWED_HOSTS=192.168.1.50 \
+  -e HERMITAGE_COVER_DISK_CACHE_ITEMS=1200 \
   -v /path/to/hermitage-data:/data \
-  hermitage:0.6.0
+  hermitage:0.6.1
 ```
 
 Open `http://<docker-host>:3001`.
@@ -58,13 +60,13 @@ HERMITAGE_TRUST_PROXY=1
 Once the repository's release workflow has published the image:
 
 ```bash
-docker pull ghcr.io/FenrisSkoll/hermitage:latest
+docker pull ghcr.io/fenrisskoll/hermitage:latest
 ```
 
 or pin a release:
 
 ```bash
-docker pull ghcr.io/FenrisSkoll/hermitage:0.6.0
+docker pull ghcr.io/fenrisskoll/hermitage:0.6.1
 ```
 
 See [`docs/PUBLISHING.md`](docs/PUBLISHING.md) for the GitHub/GHCR release process and [`docs/UNRAID.md`](docs/UNRAID.md) for Unraid deployment and Community Apps preparation.
@@ -82,8 +84,9 @@ See [`docs/PUBLISHING.md`](docs/PUBLISHING.md) for the GitHub/GHCR release proce
 | `HERMITAGE_SESSION_TTL_DAYS` | `30` | Sliding session lifetime. |
 | `HERMITAGE_SESSION_SECRET` | generated | Optional stable session-encryption secret. Otherwise `/data/session.key` is generated. |
 | `HERMITAGE_COVER_CACHE_ITEMS` | `160` | In-process artwork cache size. |
+| `HERMITAGE_COVER_DISK_CACHE_ITEMS` | `1200` | Persistent artwork renditions retained under `/data/cover-cache`. |
 | `HERMITAGE_LOGIN_RATE_LIMIT` | `10` | Failed login attempts allowed per client IP in a five-minute window. |
-| `HERMITAGE_TRUST_PROXY` | `1` | Express trust-proxy setting. Set `false` if there is no trusted reverse proxy. |
+| `HERMITAGE_TRUST_PROXY` | `false` | Express trust-proxy setting. Set `1` when exactly one trusted reverse proxy (such as NPM) sits in front of Hermitage. |
 
 ### Recommended public deployment
 
@@ -104,7 +107,7 @@ The browser can access Hermitage through a public HTTPS hostname while Hermitage
 GET /api/health
 ```
 
-returns a small JSON status object containing the Hermitage version, uptime, session configuration and current artwork-cache count. The container image also uses this endpoint for Docker health status.
+returns a small JSON status object containing the Hermitage version, uptime, session configuration, in-memory artwork-cache count, persistent artwork-cache count and current in-flight artwork requests. The container image also uses this endpoint for Docker health status.
 
 ## Development
 

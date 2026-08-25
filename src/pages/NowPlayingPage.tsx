@@ -12,6 +12,7 @@ import { downloadUrl, getAlbum, getLyricsForSong, setRating, setStar } from '../
 import { formatBytes, formatTime } from '../lib/format'
 import { withViewTransition } from '../lib/navigation'
 import { showToast } from '../lib/toast'
+import { usePrecisePlaybackTime } from '../hooks/usePrecisePlaybackTime'
 import type { Album, Song, StructuredLyrics } from '../lib/types'
 
 type Tab = NowPlayingTab
@@ -341,9 +342,9 @@ function PanelSkeleton() {
   return <div className="panel-skeleton"><span className="skeleton skeleton-line skeleton-line--medium" />{Array.from({ length: 9 }).map((_, index) => <span className="skeleton skeleton-song" key={index} />)}</div>
 }
 
-function activeLyricIndex(lyrics: StructuredLyrics | null, currentTime: number) {
+function activeLyricIndex(lyrics: StructuredLyrics | null, currentTime: number, userOffsetMs = 0) {
   if (!lyrics?.synced || !lyrics.line.length) return -1
-  const timeMs = currentTime * 1000 - (lyrics.offset || 0)
+  const timeMs = currentTime * 1000 - ((lyrics.offset || 0) + userOffsetMs)
   let active = -1
   for (let index = 0; index < lyrics.line.length; index++) {
     const start = lyrics.line[index].start
@@ -354,7 +355,9 @@ function activeLyricIndex(lyrics: StructuredLyrics | null, currentTime: number) 
 }
 
 function SyncedLyrics({ lyrics, currentTime, fullscreen = false }: { lyrics: StructuredLyrics; currentTime: number; fullscreen?: boolean }) {
-  const active = activeLyricIndex(lyrics, currentTime)
+  const { preferences } = usePreferences()
+  const preciseTime = usePrecisePlaybackTime(Boolean(lyrics.synced), currentTime)
+  const active = activeLyricIndex(lyrics, preciseTime, preferences.lyricsTimingOffsetMs)
   const activeRef = useRef<HTMLParagraphElement | null>(null)
   useEffect(() => {
     if (active < 0 || !activeRef.current) return

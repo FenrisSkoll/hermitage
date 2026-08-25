@@ -10,7 +10,7 @@ export function SettingsPanel({ open, onClose }: { open: boolean; onClose: () =>
   return (
     <div className="settings-scrim" onMouseDown={(event) => { if (event.currentTarget === event.target) onClose() }}>
       <aside className="settings-panel">
-        <div className="settings-heading"><div><span className="eyebrow">Hermitage v0.6.0</span><h2>Settings</h2></div><button className="icon-button" onClick={onClose}><X size={20} /></button></div>
+        <div className="settings-heading"><div><span className="eyebrow">Hermitage v0.6.1</span><h2>Settings</h2></div><button className="icon-button" onClick={onClose}><X size={20} /></button></div>
 
         <div className="settings-section">
           <span className="settings-section__title">Interface</span>
@@ -42,6 +42,7 @@ export function SettingsPanel({ open, onClose }: { open: boolean; onClose: () =>
           <label className="settings-field"><span><strong>Streaming quality</strong><small>Original keeps the source codec. Other choices ask Navidrome to transcode/downsample.</small></span><select value={preferences.transcodingBitrate} onChange={(event) => updatePreference('transcodingBitrate', Number(event.target.value))}><option value={0}>Original / lossless</option><option value={320}>320 kbps</option><option value={256}>256 kbps</option><option value={192}>192 kbps</option><option value={128}>128 kbps</option><option value={96}>96 kbps</option></select></label>
           <label className="settings-field"><span><strong>ReplayGain</strong><small>Applies gain in the browser when Navidrome exposes ReplayGain metadata.</small></span><select value={preferences.replayGainMode} onChange={(event) => updatePreference('replayGainMode', event.target.value as ReplayGainMode)}><option value="off">Off</option><option value="track">Track gain</option><option value="album">Album gain</option></select></label>
           <label className="settings-field"><span><strong>ReplayGain preamp</strong><small>{preferences.replayGainPreamp > 0 ? '+' : ''}{preferences.replayGainPreamp.toFixed(1)} dB</small></span><input type="range" min="-12" max="12" step="0.5" value={preferences.replayGainPreamp} onChange={(event) => updatePreference('replayGainPreamp', Number(event.target.value))} /></label>
+          <label className="settings-field"><span><strong>Lyrics timing offset</strong><small>{preferences.lyricsTimingOffsetMs > 0 ? '+' : ''}{preferences.lyricsTimingOffsetMs} ms · negative shows lyrics earlier</small></span><input type="range" min="-2000" max="2000" step="50" value={preferences.lyricsTimingOffsetMs} onChange={(event) => updatePreference('lyricsTimingOffsetMs', Number(event.target.value))} /></label>
           <label className="settings-field"><span><strong>Track transitions</strong><small>Preload is the safe default. Crossfade uses two browser audio streams and remains experimental.</small></span><select value={preferences.playbackTransitionMode} onChange={(event) => updatePreference('playbackTransitionMode', event.target.value as PlaybackTransitionMode)}><option value="standard">Standard</option><option value="preload">Preload next / gapless assist</option><option value="crossfade">Crossfade (experimental)</option></select></label>
           {preferences.playbackTransitionMode === 'crossfade' ? <label className="settings-field"><span><strong>Crossfade length</strong><small>{preferences.crossfadeSeconds.toFixed(0)} seconds</small></span><input type="range" min="1" max="12" step="1" value={preferences.crossfadeSeconds} onChange={(event) => updatePreference('crossfadeSeconds', Number(event.target.value))} /></label> : null}
         </div>
@@ -61,7 +62,7 @@ export function SettingsPanel({ open, onClose }: { open: boolean; onClose: () =>
 
         <div className="settings-section settings-about">
           <span className="settings-section__title">About</span>
-          <div className="settings-about__row"><span><strong>Hermitage</strong><small>Release</small></span><b>v0.6.0</b></div>
+          <div className="settings-about__row"><span><strong>Hermitage</strong><small>Release</small></span><b>v0.6.1</b></div>
           <div className="settings-about__row"><span><strong>Navidrome server</strong><small>Current session</small></span><b>{auth.server || 'Not connected'}</b></div>
           <div className="settings-about__row"><span><strong>User</strong><small>Current session</small></span><b>{auth.username || '—'}</b></div>
           <a className="settings-about__health" href="/api/health" target="_blank" rel="noreferrer">Open health endpoint</a>

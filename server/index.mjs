@@ -2,7 +2,7 @@ import crypto from 'node:crypto'
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { Readable } from 'node:stream'
+import { PassThrough, Readable } from 'node:stream'
 import { pipeline } from 'node:stream/promises'
 import express from 'express'
 
@@ -14,7 +14,7 @@ const secureCookies = String(process.env.HERMITAGE_SECURE_COOKIES || '').toLower
 const allowedHosts = String(process.env.HERMITAGE_ALLOWED_HOSTS || '').split(',').map((value) => value.trim().toLowerCase()).filter(Boolean)
 const defaultServerUrl = String(process.env.HERMITAGE_DEFAULT_SERVER_URL || '').trim()
 const lockServerUrl = String(process.env.HERMITAGE_LOCK_SERVER_URL || '').toLowerCase() === 'true'
-const trustProxyRaw = String(process.env.HERMITAGE_TRUST_PROXY ?? '1').trim().toLowerCase()
+const trustProxyRaw = String(process.env.HERMITAGE_TRUST_PROXY ?? 'false').trim().toLowerCase()
 const loginWindowMs = 5 * 60 * 1000
 const loginMaxAttempts = Math.max(3, Number(process.env.HERMITAGE_LOGIN_RATE_LIMIT || 10))
 const sessionTtlDays = Math.max(1, Number(process.env.HERMITAGE_SESSION_TTL_DAYS || 30))
@@ -78,11 +78,101 @@ let sessionsDirty = false
 // while moving quickly between Home, Album and Now Playing.
 const coverCache = new Map()
 const coverCacheLimit = Math.max(24, Number(process.env.HERMITAGE_COVER_CACHE_ITEMS || 160))
+const coverDiskCacheLimit = Math.max(64, Number(process.env.HERMITAGE_COVER_DISK_CACHE_ITEMS || 1200))
+const coverCacheDir = path.join(dataDir, 'cover-cache')
+const coverInflight = new Map()
+let coverDiskEntryCount = 0
+let coverWritesSincePrune = 0
 
 function cacheCover(key, entry) {
   if (coverCache.has(key)) coverCache.delete(key)
   coverCache.set(key, entry)
   while (coverCache.size > coverCacheLimit) coverCache.delete(coverCache.keys().next().value)
+}
+
+const coverSizeBuckets = [128, 256, 512, 768, 1024, 1400, 1600]
+
+function bucketCoverSize(value) {
+  const requested = Math.max(32, Math.min(1600, Number(value || 600)))
+  return coverSizeBuckets.find((size) => size >= requested) || 1600
+}
+
+function coverCacheIdentity(session, id, size) {
+  return `${session.server}|${session.username}|${id}|${size}`
+}
+
+function coverDiskPaths(cacheKey) {
+  const digest = crypto.createHash('sha256').update(cacheKey, 'utf8').digest('hex')
+  return {
+    data: path.join(coverCacheDir, `${digest}.cover`),
+    meta: path.join(coverCacheDir, `${digest}.json`),
+    temp: path.join(coverCacheDir, `${digest}.${process.pid}.${crypto.randomBytes(4).toString('hex')}.tmp`),
+    etag: `"hermitage-${digest.slice(0, 32)}"`
+  }
+}
+
+function ensureCoverCacheDir() {
+  ensureDataDir()
+  fs.mkdirSync(coverCacheDir, { recursive: true })
+}
+
+function readDiskCover(cacheKey) {
+  try {
+    const paths = coverDiskPaths(cacheKey)
+    const meta = JSON.parse(fs.readFileSync(paths.meta, 'utf8'))
+    const stat = fs.statSync(paths.data)
+    if (!stat.isFile() || stat.size <= 0) return null
+    // Touch the pair so pruning behaves like an on-disk LRU.
+    const now = new Date()
+    fs.utimes(paths.data, now, now, () => undefined)
+    fs.utimes(paths.meta, now, now, () => undefined)
+    return {
+      path: paths.data,
+      contentType: meta.contentType || 'image/jpeg',
+      etag: meta.etag || paths.etag,
+      bytes: Number(meta.bytes || stat.size)
+    }
+  } catch {
+    return null
+  }
+}
+
+function serveCoverEntry(req, res, entry, cacheState = 'MEMORY') {
+  res.setHeader('Content-Type', entry.contentType || 'image/jpeg')
+  res.setHeader('Cache-Control', 'private, max-age=604800, stale-while-revalidate=86400')
+  res.setHeader('ETag', entry.etag)
+  res.setHeader('X-Hermitage-Cache', cacheState)
+  res.setHeader('X-Accel-Buffering', 'no')
+  if (entry.bytes) res.setHeader('Content-Length', String(entry.bytes))
+  if (req.headers['if-none-match'] === entry.etag) return res.status(304).end()
+  if (entry.buffer) return res.send(entry.buffer)
+  const stream = fs.createReadStream(entry.path)
+  stream.on('error', () => { if (!res.headersSent) res.status(502).end(); else res.destroy() })
+  stream.pipe(res)
+}
+
+function pruneDiskCoverCache() {
+  try {
+    ensureCoverCacheDir()
+    const metas = fs.readdirSync(coverCacheDir)
+      .filter((name) => name.endsWith('.json'))
+      .map((name) => {
+        const metaPath = path.join(coverCacheDir, name)
+        try { return { name, mtime: fs.statSync(metaPath).mtimeMs } } catch { return null }
+      })
+      .filter(Boolean)
+      .sort((a, b) => a.mtime - b.mtime)
+    coverDiskEntryCount = metas.length
+    const excess = Math.max(0, metas.length - coverDiskCacheLimit)
+    for (const item of metas.slice(0, excess)) {
+      const stem = item.name.slice(0, -5)
+      try { fs.unlinkSync(path.join(coverCacheDir, item.name)) } catch {}
+      try { fs.unlinkSync(path.join(coverCacheDir, `${stem}.cover`)) } catch {}
+      coverDiskEntryCount = Math.max(0, coverDiskEntryCount - 1)
+    }
+  } catch (error) {
+    console.warn(`Could not prune artwork cache: ${error.message}`)
+  }
 }
 
 function ensureDataDir() {
@@ -189,6 +279,8 @@ function loadSessions() {
 }
 
 loadSessions()
+ensureCoverCacheDir()
+pruneDiskCoverCache()
 
 const allowedReads = new Set([
   'ping',
@@ -232,7 +324,11 @@ function parseCookies(header = '') {
   return cookies
 }
 
-function setSessionCookie(res, id) {
+function requestIsSecure(req) {
+  return Boolean(req?.secure)
+}
+
+function setSessionCookie(res, id, req) {
   const attrs = [
     `hermitage_session=${encodeURIComponent(id)}`,
     'HttpOnly',
@@ -240,11 +336,11 @@ function setSessionCookie(res, id) {
     'Path=/',
     `Max-Age=${Math.floor(sessionTtlMs / 1000)}`
   ]
-  if (secureCookies) attrs.push('Secure')
+  if (secureCookies && requestIsSecure(req)) attrs.push('Secure')
   res.setHeader('Set-Cookie', attrs.join('; '))
 }
 
-function clearSessionCookie(res) {
+function clearSessionCookie(res, req) {
   const attrs = [
     'hermitage_session=',
     'HttpOnly',
@@ -252,7 +348,7 @@ function clearSessionCookie(res) {
     'Path=/',
     'Max-Age=0'
   ]
-  if (secureCookies) attrs.push('Secure')
+  if (secureCookies && requestIsSecure(req)) attrs.push('Secure')
   res.setHeader('Set-Cookie', attrs.join('; '))
 }
 
@@ -277,11 +373,11 @@ function getSession(req) {
 function requireSession(req, res, next) {
   const session = getSession(req)
   if (!session) {
-    clearSessionCookie(res)
+    clearSessionCookie(res, req)
     return res.status(401).json({ error: 'Not connected to Navidrome.' })
   }
   // Sliding cookie lifetime: active users stay signed in for the configured TTL.
-  setSessionCookie(res, session.id)
+  setSessionCookie(res, session.id, req)
   req.hermitageSession = session
   next()
 }
@@ -378,7 +474,7 @@ if (lockServerUrl && !normalizedDefaultServerUrl) {
 
 app.get('/api/config', (_req, res) => {
   res.json({
-    version: '0.6.0',
+    version: '0.6.1',
     defaultServerUrl: lockServerUrl ? undefined : (normalizedDefaultServerUrl || undefined),
     lockServerUrl,
     secureCookies,
@@ -387,7 +483,7 @@ app.get('/api/config', (_req, res) => {
 })
 
 app.get('/api/health', (_req, res) => {
-  res.json({ ok: true, version: '0.6.0', uptimeSeconds: Math.round(process.uptime()), sessionTtlDays, persistentSessions: true, coverCacheItems: coverCache.size, serverSelection: lockServerUrl ? 'locked' : (normalizedDefaultServerUrl ? 'prefilled' : 'user') })
+  res.json({ ok: true, version: '0.6.1', uptimeSeconds: Math.round(process.uptime()), sessionTtlDays, persistentSessions: true, coverCacheItems: coverCache.size, coverDiskCacheItems: coverDiskEntryCount, coverInflight: coverInflight.size, serverSelection: lockServerUrl ? 'locked' : (normalizedDefaultServerUrl ? 'prefilled' : 'user') })
 })
 
 app.post('/api/login', async (req, res) => {
@@ -429,7 +525,7 @@ app.post('/api/login', async (req, res) => {
     sessionsDirty = true
     persistSessions()
     clearLoginFailures(rate.key)
-    setSessionCookie(res, id)
+    setSessionCookie(res, id, req)
     res.json({
       connected: true,
       server: normalizedServer,
@@ -445,7 +541,7 @@ app.post('/api/login', async (req, res) => {
 app.get('/api/session', (req, res) => {
   const session = getSession(req)
   if (!session) return res.json({ connected: false })
-  setSessionCookie(res, session.id)
+  setSessionCookie(res, session.id, req)
   res.json({ connected: true, server: session.server, username: session.username })
 })
 
@@ -456,7 +552,7 @@ app.post('/api/logout', (req, res) => {
     sessionsDirty = true
     persistSessions()
   }
-  clearSessionCookie(res)
+  clearSessionCookie(res, req)
   res.json({ ok: true })
 })
 
@@ -485,21 +581,42 @@ app.post('/api/subsonic/:method', requireSession, async (req, res) => {
 })
 
 app.get('/api/cover/:id', requireMediaSession, async (req, res) => {
-  const size = Math.max(32, Math.min(1600, Number(req.query.size || 600)))
-  const cacheKey = `${req.hermitageSession.server}|${req.params.id}|${size}`
+  const size = bucketCoverSize(req.query.size)
+  const cacheKey = coverCacheIdentity(req.hermitageSession, req.params.id, size)
   const cached = coverCache.get(cacheKey)
   if (cached) {
-    // Refresh LRU order.
     coverCache.delete(cacheKey)
     coverCache.set(cacheKey, cached)
-    res.setHeader('Content-Type', cached.contentType)
-    res.setHeader('Cache-Control', 'private, max-age=604800')
-    res.setHeader('ETag', cached.etag)
-    if (req.headers['if-none-match'] === cached.etag) return res.status(304).end()
-    return res.send(cached.buffer)
+    return serveCoverEntry(req, res, cached, 'MEMORY')
   }
 
+  const disk = readDiskCover(cacheKey)
+  if (disk) {
+    // Warm the in-memory LRU in the background without delaying first byte.
+    fs.promises.readFile(disk.path).then((buffer) => cacheCover(cacheKey, { ...disk, buffer })).catch(() => undefined)
+    return serveCoverEntry(req, res, disk, 'DISK')
+  }
+
+  // If another browser/component is already fetching this exact rendition, wait
+  // for that single upstream request instead of asking Navidrome to resize it again.
+  const inflight = coverInflight.get(cacheKey)
+  if (inflight) {
+    try {
+      await inflight
+      const warmed = coverCache.get(cacheKey) || readDiskCover(cacheKey)
+      if (warmed) return serveCoverEntry(req, res, warmed, 'COALESCED')
+    } catch {
+      // The first request failed; fall through and let this request retry it.
+    }
+  }
+
+  let settleInflight
+  const completed = new Promise((resolve) => { settleInflight = resolve })
+  coverInflight.set(cacheKey, completed)
+  const paths = coverDiskPaths(cacheKey)
+
   try {
+    ensureCoverCacheDir()
     const response = await navFetch(
       req.hermitageSession,
       'getCoverArt',
@@ -507,17 +624,64 @@ app.get('/api/cover/:id', requireMediaSession, async (req, res) => {
       { signal: AbortSignal.timeout(30000) },
       'binary'
     )
-    if (!response.ok) return res.status(response.status).end()
+    if (!response.ok || !response.body) {
+      const error = new Error(`Navidrome artwork request failed (${response.status}).`)
+      settleInflight(false)
+      return res.status(response.status || 502).end()
+    }
+
     const contentType = response.headers.get('content-type') || 'image/jpeg'
-    const buffer = Buffer.from(await response.arrayBuffer())
-    const etag = `"${crypto.createHash('sha1').update(buffer).digest('hex')}"`
-    cacheCover(cacheKey, { buffer, contentType, etag })
+    const contentLength = Number(response.headers.get('content-length') || 0)
     res.setHeader('Content-Type', contentType)
-    res.setHeader('Cache-Control', 'private, max-age=604800')
-    res.setHeader('ETag', etag)
-    res.send(buffer)
+    res.setHeader('Cache-Control', 'private, max-age=604800, stale-while-revalidate=86400')
+    res.setHeader('X-Hermitage-Cache', 'MISS-STREAM')
+    res.setHeader('X-Accel-Buffering', 'no')
+    res.setHeader('ETag', paths.etag)
+    res.setHeader('X-Hermitage-Cover-Size', String(size))
+    if (contentLength > 0) res.setHeader('Content-Length', String(contentLength))
+
+    // Stream bytes to the browser immediately while writing the same response to
+    // /data. v0.6.0 waited for response.arrayBuffer(), which made remote cache
+    // misses look frozen until the complete image had arrived from Navidrome.
+    const source = Readable.fromWeb(response.body)
+    const clientBranch = new PassThrough()
+    const cacheBranch = new PassThrough()
+    source.pipe(clientBranch)
+    source.pipe(cacheBranch)
+
+    const cachePromise = pipeline(cacheBranch, fs.createWriteStream(paths.temp))
+    const clientPromise = pipeline(clientBranch, res).catch((error) => {
+      // A browser navigating away should not throw away the cache fill.
+      if (!['ERR_STREAM_PREMATURE_CLOSE', 'ECONNRESET'].includes(error?.code)) throw error
+    })
+
+    await cachePromise
+    const stat = await fs.promises.stat(paths.temp)
+    const meta = { contentType, etag: paths.etag, bytes: stat.size, size, savedAt: Date.now() }
+    await fs.promises.rename(paths.temp, paths.data)
+    await fs.promises.writeFile(paths.meta, JSON.stringify(meta), { mode: 0o600 })
+    coverDiskEntryCount += 1
+
+    // Read into the small in-process LRU after the response has already streamed.
+    // This improves repeat navigation without delaying the original cache miss.
+    const buffer = await fs.promises.readFile(paths.data)
+    cacheCover(cacheKey, { buffer, contentType, etag: paths.etag, bytes: buffer.length })
+
+    coverWritesSincePrune += 1
+    if (coverWritesSincePrune >= 32 || coverDiskEntryCount > coverDiskCacheLimit) {
+      coverWritesSincePrune = 0
+      setImmediate(pruneDiskCoverCache)
+    }
+
+    settleInflight(true)
+    await clientPromise
   } catch (error) {
-    res.status(502).json({ error: error.message })
+    try { await fs.promises.unlink(paths.temp) } catch {}
+    settleInflight(false)
+    if (!res.headersSent) res.status(502).json({ error: error.message })
+    else if (!res.writableEnded && !res.destroyed) res.destroy()
+  } finally {
+    if (coverInflight.get(cacheKey) === completed) coverInflight.delete(cacheKey)
   }
 })
 
@@ -649,7 +813,7 @@ app.get('/api/radio/:id', requireMediaSession, async (req, res) => {
       headers: {
         'Accept': 'audio/*,*/*;q=0.8',
         'Accept-Encoding': 'identity',
-        'User-Agent': 'Hermitage/0.6.0'
+        'User-Agent': 'Hermitage/0.6.1'
       },
       signal: abortController.signal
     })
@@ -705,7 +869,7 @@ for (const signal of ['SIGTERM', 'SIGINT']) {
 }
 
 app.listen(port, () => {
-  console.log(`Hermitage v0.6.0 listening on http://0.0.0.0:${port}`)
+  console.log(`Hermitage v0.6.1 listening on http://0.0.0.0:${port}`)
   console.log(`Session persistence: ${sessionsFile} (${sessionTtlDays}-day sliding TTL)`)
   console.log(`Server selection: ${lockServerUrl ? `locked to ${normalizedDefaultServerUrl}` : (normalizedDefaultServerUrl ? `prefilled with ${normalizedDefaultServerUrl}` : 'user supplied')}`)
 })

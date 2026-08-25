@@ -87,6 +87,7 @@ type PlayerContextValue = {
   visualizerReady: boolean
   prepareVisualizer: () => Promise<boolean>
   getVisualizerAnalyser: () => AnalyserNode | null
+  getPlaybackTime: () => number
 }
 
 const PlayerContext = createContext<PlayerContextValue | null>(null)
@@ -228,6 +229,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const getVisualizerAnalyser = useCallback(() => analyserRef.current, [])
+  const getPlaybackTime = useCallback(() => audioRef.current?.currentTime || 0, [])
 
   const cancelCrossfade = useCallback(() => {
     if (crossfadeTimerRef.current !== null) window.clearInterval(crossfadeTimerRef.current)
@@ -891,8 +893,9 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
     visualizerSupported: typeof window !== 'undefined' && ('AudioContext' in window || 'webkitAudioContext' in window),
     visualizerReady,
     prepareVisualizer,
-    getVisualizerAnalyser
-  }), [current, queue, currentIndex, playing, playbackLoading, playbackError, currentTime, duration, volumeState, muted, shuffle, repeat, scrobbleState, history, currentReplayGain.db, playSong, playQueue, playRadio, togglePlay, next, previous, seek, seekRelative, setVolume, toggleMute, toggleShuffle, cycleRepeat, removeFromQueue, clearQueueAfterCurrent, reorderQueue, addNext, addToQueue, addManyToQueue, retryPlayback, clearHistory, visualizerReady, prepareVisualizer, getVisualizerAnalyser])
+    getVisualizerAnalyser,
+    getPlaybackTime
+  }), [current, queue, currentIndex, playing, playbackLoading, playbackError, currentTime, duration, volumeState, muted, shuffle, repeat, scrobbleState, history, currentReplayGain.db, playSong, playQueue, playRadio, togglePlay, next, previous, seek, seekRelative, setVolume, toggleMute, toggleShuffle, cycleRepeat, removeFromQueue, clearQueueAfterCurrent, reorderQueue, addNext, addToQueue, addManyToQueue, retryPlayback, clearHistory, visualizerReady, prepareVisualizer, getVisualizerAnalyser, getPlaybackTime])
 
   return <PlayerContext.Provider value={value}>{children}</PlayerContext.Provider>
 }

@@ -6,7 +6,7 @@ Build Hermitage directly on the NAS:
 
 ```bash
 cd /mnt/user/appdata/hermitage/app
-docker build -t hermitage:0.6.0 .
+docker build -t hermitage:0.6.1 .
 ```
 
 Create persistent data storage:
@@ -27,12 +27,13 @@ docker run -d \
   -e HERMITAGE_DATA_DIR=/data \
   -e HERMITAGE_SESSION_TTL_DAYS=30 \
   -e HERMITAGE_COVER_CACHE_ITEMS=160 \
+  -e HERMITAGE_COVER_DISK_CACHE_ITEMS=1200 \
   -e HERMITAGE_DEFAULT_SERVER_URL=http://192.168.1.50:4533 \
   -e HERMITAGE_LOCK_SERVER_URL=true \
   -e HERMITAGE_ALLOWED_HOSTS=192.168.1.50 \
   -e HERMITAGE_TRUST_PROXY=1 \
   -v /mnt/user/appdata/hermitage/data:/data \
-  hermitage:0.6.0
+  hermitage:0.6.1
 ```
 
 If Hermitage is currently being accessed directly as `http://NAS-IP:3001`, leave `HERMITAGE_SECURE_COOKIES` unset/false. Once it is available exclusively through an HTTPS reverse proxy, recreate the container with:
@@ -60,13 +61,13 @@ http://NAS-IP:3001
 You no longer need to build the image on the NAS:
 
 ```bash
-docker pull ghcr.io/YOUR_GITHUB_USERNAME/hermitage:latest
+docker pull ghcr.io/fenrisskoll/hermitage:latest
 ```
 
-Then recreate the container using the GHCR image name instead of `hermitage:0.6.0`.
+Then recreate the container using the GHCR image name instead of `hermitage:0.6.1`.
 
 Your `/mnt/user/appdata/hermitage/data` bind mount remains unchanged, so container replacement does not remove persisted Hermitage sessions.
 
 ## Community Apps
 
-`templates/hermitage.xml` and `ca_profile.xml` are included as a starting point. Replace the GitHub placeholders, publish the GHCR image publicly, validate the XML, then use Unraid Community Apps' submission flow and run **Validate and Scan** before submitting.
+`templates/hermitage.xml` and `ca_profile.xml` point at the FenrisSkoll repository/GHCR package. Publish the tagged GHCR image, test the template locally, validate the XML, then use Unraid Community Apps' submission flow and run **Validate and Scan** before submitting.

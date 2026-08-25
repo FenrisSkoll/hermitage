@@ -88,9 +88,16 @@ export async function subsonicAction(method: string, params: Record<string, unkn
   return result
 }
 
+const coverSizeBuckets = [128, 256, 512, 768, 1024, 1400, 1600]
+
+export function coverSizeBucket(size = 600) {
+  const requested = Math.max(32, Math.min(1600, Number(size) || 600))
+  return coverSizeBuckets.find((candidate) => candidate >= requested) || 1600
+}
+
 export function coverUrl(id?: string, size = 600) {
   if (!id) return ''
-  return `/api/cover/${encodeURIComponent(id)}?size=${size}`
+  return `/api/cover/${encodeURIComponent(id)}?size=${coverSizeBucket(size)}`
 }
 
 export function streamUrl(id: string, generation?: number, maxBitRate = 0) {

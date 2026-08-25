@@ -22,6 +22,7 @@ import { usePlayer } from '../context/PlayerContext'
 import { usePreferences } from '../context/PreferencesContext'
 import { setStar } from '../lib/api'
 import { formatTime } from '../lib/format'
+import { usePrecisePlaybackTime } from '../hooks/usePrecisePlaybackTime'
 import type { Album, Song, StructuredLyrics } from '../lib/types'
 import { ArtworkBackdrop } from './ArtworkBackdrop'
 import { CrossfadeCover } from './CrossfadeCover'
@@ -29,9 +30,9 @@ import { FullscreenSpectrum } from './FullscreenSpectrum'
 
 export type ImmersiveMode = 'art' | 'album' | 'queue' | 'lyrics'
 
-function activeLyricIndex(lyrics: StructuredLyrics, currentTime: number) {
+function activeLyricIndex(lyrics: StructuredLyrics, currentTime: number, userOffsetMs = 0) {
   if (!lyrics.synced) return -1
-  const currentMs = Math.max(0, currentTime * 1000 + (lyrics.offset || 0))
+  const currentMs = Math.max(0, currentTime * 1000 - ((lyrics.offset || 0) + userOffsetMs))
   let active = -1
   for (let index = 0; index < lyrics.line.length; index += 1) {
     const start = lyrics.line[index]?.start
@@ -42,7 +43,9 @@ function activeLyricIndex(lyrics: StructuredLyrics, currentTime: number) {
 }
 
 function ImmersiveLyrics({ lyrics, currentTime }: { lyrics: StructuredLyrics; currentTime: number }) {
-  const active = activeLyricIndex(lyrics, currentTime)
+  const { preferences } = usePreferences()
+  const preciseTime = usePrecisePlaybackTime(Boolean(lyrics.synced), currentTime)
+  const active = activeLyricIndex(lyrics, preciseTime, preferences.lyricsTimingOffsetMs)
   const activeRef = useRef<HTMLParagraphElement | null>(null)
 
   useEffect(() => {

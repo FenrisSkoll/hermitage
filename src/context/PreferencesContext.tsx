@@ -32,6 +32,7 @@ export type Preferences = {
   spectrumStyle: SpectrumStyle
   focusPreset: FocusPreset
   miniPlayer: boolean
+  lyricsTimingOffsetMs: number
 }
 
 const defaults: Preferences = {
@@ -57,6 +58,7 @@ const defaults: Preferences = {
   spectrumStyle: 'spectrum',
   focusPreset: 'spectrum',
   miniPlayer: false,
+  lyricsTimingOffsetMs: 0,
 }
 
 const storageKey = 'hermitage-preferences-v6'
@@ -82,7 +84,8 @@ function loadPreferences(): Preferences {
       ambientSaturation: Math.max(.2, Math.min(2, Number(parsed.ambientSaturation) || 1.05)),
       spectrumStyle: ['spectrum', 'wave', 'minimal'].includes(parsed.spectrumStyle) ? parsed.spectrumStyle : 'spectrum',
       focusPreset: ['artwork', 'spectrum', 'queue', 'lyrics', 'album'].includes(parsed.focusPreset) ? parsed.focusPreset : 'spectrum',
-      miniPlayer: Boolean(parsed.miniPlayer)
+      miniPlayer: Boolean(parsed.miniPlayer),
+      lyricsTimingOffsetMs: Math.max(-2000, Math.min(2000, Number(parsed.lyricsTimingOffsetMs) || 0))
     }
   } catch {
     return defaults
