@@ -1,0 +1,38 @@
+name: Bug report
+description: Report a reproducible Hermitage problem.
+title: "[Bug]: "
+labels: [bug]
+body:
+  - type: input
+    id: hermitage
+    attributes:
+      label: Hermitage version
+      placeholder: 0.6.0
+    validations:
+      required: true
+  - type: input
+    id: navidrome
+    attributes:
+      label: Navidrome version
+    validations:
+      required: true
+  - type: input
+    id: browser
+    attributes:
+      label: Browser / platform
+      placeholder: Brave 1.x / Windows 11
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: Include clear steps to reproduce and what you expected instead.
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs
+      description: Remove credentials, tokens and private URLs before posting.
+      render: shell

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Container version="2">
+  <Name>Hermitage</Name>
+  <Repository>ghcr.io/FenrisSkoll/hermitage:latest</Repository>
+  <Registry>https://github.com/FenrisSkoll/hermitage/pkgs/container/hermitage</Registry>
+  <Network>bridge</Network>
+  <Shell>bash</Shell>
+  <Privileged>false</Privileged>
+  <Icon>https://raw.githubusercontent.com/FenrisSkoll/hermitage/main/public/icons/icon-512.png</Icon>
+  <WebUI>http://[IP]:[PORT:3001]</WebUI>
+  <Overview>Hermitage is a modern Navidrome/OpenSubsonic web client with immersive Now Playing, synced lyrics, live spectrum visualisation, artwork-driven themes, queue and playlist management, responsive ultrawide layouts, PWA support and a desktop-first library interface.</Overview>
+  <Support>https://github.com/FenrisSkoll/hermitage/issues</Support>
+  <Project>https://github.com/FenrisSkoll/hermitage</Project>
+  <TemplateURL>https://raw.githubusercontent.com/FenrisSkoll/hermitage/main/templates/hermitage.xml</TemplateURL>
+  <ReadMe>https://raw.githubusercontent.com/FenrisSkoll/hermitage/main/README.md</ReadMe>
+  <Category>MediaApp:Music</Category>
+  <ExtraSearchTerms>navidrome subsonic opensubsonic music player</ExtraSearchTerms>
+  <Requires>An existing Navidrome/OpenSubsonic server reachable from the Hermitage container.</Requires>
+  <Changes>v0.6.0 release-candidate: single-server mode, GHCR/Unraid packaging, health checks, login rate limiting and deployment hardening.</Changes>
+  <Date>2026-08-25</Date>
+  <Beta>true</Beta>
+  <License>MIT</License>
+
+  <Config Name="WebUI" Target="3001" Default="3001" Mode="tcp" Description="Hermitage web interface port." Type="Port" Display="always" Required="true" Mask="false"/>
+  <Config Name="Appdata" Target="/data" Default="/mnt/user/appdata/hermitage" Mode="rw" Description="Persistent encrypted sessions and Hermitage server data." Type="Path" Display="always" Required="true" Mask="false"/>
+  <Config Name="Navidrome URL" Target="HERMITAGE_DEFAULT_SERVER_URL" Default="http://192.168.1.50:4533" Description="Navidrome/OpenSubsonic base URL as reachable from this container." Type="Variable" Display="always" Required="true" Mask="false"/>
+  <Config Name="Lock Navidrome URL" Target="HERMITAGE_LOCK_SERVER_URL" Default="true" Description="Hide server selection from the login screen and force the configured Navidrome URL." Type="Variable" Display="always" Required="true" Mask="false"/>
+  <Config Name="Allowed Navidrome Hosts" Target="HERMITAGE_ALLOWED_HOSTS" Default="192.168.1.50" Description="Optional comma-separated hostname/IP allow-list. Do not include ports." Type="Variable" Display="always" Required="false" Mask="false"/>
+  <Config Name="Secure Cookies" Target="HERMITAGE_SECURE_COOKIES" Default="false" Description="Set true only when Hermitage is accessed exclusively over HTTPS." Type="Variable" Display="advanced" Required="true" Mask="false"/>
+  <Config Name="Session Lifetime (days)" Target="HERMITAGE_SESSION_TTL_DAYS" Default="30" Description="Sliding login lifetime in days." Type="Variable" Display="advanced" Required="true" Mask="false"/>
+  <Config Name="Artwork Cache Items" Target="HERMITAGE_COVER_CACHE_ITEMS" Default="160" Description="Maximum in-process artwork cache entries." Type="Variable" Display="advanced" Required="true" Mask="false"/>
+  <Config Name="Login Rate Limit" Target="HERMITAGE_LOGIN_RATE_LIMIT" Default="10" Description="Failed login attempts allowed per client IP in five minutes." Type="Variable" Display="advanced" Required="true" Mask="false"/>
+  <Config Name="Trust Proxy" Target="HERMITAGE_TRUST_PROXY" Default="1" Description="Express trust-proxy value. 1 is suitable when one reverse proxy sits in front of Hermitage." Type="Variable" Display="advanced" Required="false" Mask="false"/>
+</Container>

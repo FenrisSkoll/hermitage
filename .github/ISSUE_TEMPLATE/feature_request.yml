@@ -1,0 +1,16 @@
+name: Feature request
+description: Suggest an improvement to Hermitage.
+title: "[Feature]: "
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What would you like Hermitage to do?
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Context / workflow
+      description: Screenshots or references are useful for UI requests.

@@ -1,0 +1,7 @@
+node_modules/
+dist/
+.hermitage-data/
+*.log
+*.zip
+.DS_Store
+.env

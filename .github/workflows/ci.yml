@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Build frontend
+        run: npm run build
+
+      - name: Check server syntax
+        run: node --check server/index.mjs
+
+      - name: Build Docker image
+        run: docker build -t hermitage:ci .

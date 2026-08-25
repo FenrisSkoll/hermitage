@@ -1,0 +1,26 @@
+# Changelog
+
+## 0.6.0 - 2026-08-25
+
+Release-candidate/productisation pass for public GitHub and container distribution.
+
+- Added optional single-server mode with `HERMITAGE_DEFAULT_SERVER_URL` and `HERMITAGE_LOCK_SERVER_URL`.
+- Added public `/api/config` deployment metadata endpoint.
+- Expanded `/api/health` and added a Docker `HEALTHCHECK`.
+- Added per-client login attempt rate limiting.
+- Added configurable Express reverse-proxy trust via `HERMITAGE_TRUST_PROXY`.
+- Added baseline HTTP security headers.
+- Added a React error boundary and reduced-motion support.
+- Added release/about information to Settings.
+- Added GitHub Actions CI and multi-architecture GHCR publishing workflows.
+- Added Docker Compose examples for local builds and GHCR deployments.
+- Added Unraid Community Apps metadata/template starter files.
+- Added MIT license, security policy, contribution guide and release documentation.
+- Retains all v0.5.1 UI, fullscreen visualizer, library, lyrics, queue, playlist, PWA and playback functionality.
+
+## 0.5.1
+
+- Ultrawide Home shelves use available width and respect album-grid density.
+- Home artist links navigate to artist pages.
+
+Earlier pre-release changes are documented in Git history and prior releases.

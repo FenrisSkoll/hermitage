@@ -1,0 +1,35 @@
+services:
+  hermitage:
+    build: .
+    image: hermitage:0.6.0
+    container_name: hermitage
+    ports:
+      - "3001:3001"
+    environment:
+      PORT: "3001"
+      HERMITAGE_DATA_DIR: "/data"
+      HERMITAGE_SESSION_TTL_DAYS: "30"
+      HERMITAGE_COVER_CACHE_ITEMS: "160"
+
+      # Recommended single-server deployment:
+      # HERMITAGE_DEFAULT_SERVER_URL: "http://192.168.1.50:4533"
+      # HERMITAGE_LOCK_SERVER_URL: "true"
+      # HERMITAGE_ALLOWED_HOSTS: "192.168.1.50"
+
+      # Set true when users access Hermitage only over HTTPS.
+      # HERMITAGE_SECURE_COOKIES: "true"
+
+      # Number of failed logins allowed per client IP in five minutes.
+      # HERMITAGE_LOGIN_RATE_LIMIT: "10"
+
+      # Express trust-proxy setting. "1" is suitable for one reverse proxy such as NPM.
+      # HERMITAGE_TRUST_PROXY: "1"
+
+      # Optional stable secret. If omitted, Hermitage creates /data/session.key.
+      # HERMITAGE_SESSION_SECRET: "replace-with-a-long-random-secret"
+    volumes:
+      - hermitage-data:/data
+    restart: unless-stopped
+
+volumes:
+  hermitage-data:

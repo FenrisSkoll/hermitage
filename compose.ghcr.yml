@@ -1,0 +1,19 @@
+services:
+  hermitage:
+    image: ghcr.io/FenrisSkoll/hermitage:latest
+    container_name: hermitage
+    ports:
+      - "3001:3001"
+    environment:
+      PORT: "3001"
+      HERMITAGE_DATA_DIR: "/data"
+      HERMITAGE_SESSION_TTL_DAYS: "30"
+      HERMITAGE_COVER_CACHE_ITEMS: "160"
+      HERMITAGE_DEFAULT_SERVER_URL: "http://YOUR_NAVIDROME_IP:4533"
+      HERMITAGE_LOCK_SERVER_URL: "true"
+      HERMITAGE_ALLOWED_HOSTS: "YOUR_NAVIDROME_IP"
+      HERMITAGE_SECURE_COOKIES: "false"
+      HERMITAGE_TRUST_PROXY: "1"
+    volumes:
+      - ./data:/data
+    restart: unless-stopped
