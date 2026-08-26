@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.6.2 - 2026-08-26
+
+- Improved immersive mobile layout with dynamic-viewport sizing and safe-area handling for installed web apps.
+- Reduced artwork size in portrait Lyrics mode to match the compact Spectrum composition and leave substantially more room for synced lyrics.
+- Added mode-specific immersive CSS hooks for responsive layout tuning.
+- Clarified iPhone fullscreen behavior: true element fullscreen remains unavailable for custom DOM UI in normal iPhone browsers; installing Hermitage to the Home Screen provides the chrome-free app experience.
+
 ## 0.6.1 - 2026-08-25
 
 - Stream artwork cache misses immediately to the browser rather than buffering the entire Navidrome response first.

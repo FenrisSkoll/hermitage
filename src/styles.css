@@ -1499,3 +1499,69 @@ html[data-desktop-density="ultrawide"] .page {
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior:auto !important; animation-duration:.001ms !important; animation-iteration-count:1 !important; transition-duration:.001ms !important; }
 }
+
+/* v0.6.2 mobile immersive refinements ---------------------------------------
+   On iPhone, arbitrary DOM elements cannot enter native element fullscreen in
+   a normal browser tab. These rules make the soft-fullscreen view use the
+   dynamic viewport correctly and make an installed Home Screen/PWA session
+   fill the available screen while respecting the notch/home indicator. */
+.immersive-now-playing {
+  width:100vw;
+  height:100vh;
+  height:100dvh;
+  max-height:100dvh;
+  overscroll-behavior:none;
+}
+
+@media (max-width:820px) {
+  .immersive-topbar {
+    height:calc(68px + env(safe-area-inset-top, 0px));
+    padding-top:env(safe-area-inset-top, 0px);
+    padding-left:max(16px, env(safe-area-inset-left, 0px));
+    padding-right:max(16px, env(safe-area-inset-right, 0px));
+  }
+  .immersive-stage,
+  .immersive-now-playing.is-split .immersive-stage {
+    padding-top:calc(68px + env(safe-area-inset-top, 0px));
+    padding-bottom:calc(122px + env(safe-area-inset-bottom, 0px));
+  }
+  .immersive-bottom {
+    padding-left:max(16px, env(safe-area-inset-left, 0px));
+    padding-right:max(16px, env(safe-area-inset-right, 0px));
+    padding-bottom:calc(17px + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+/* Portrait Lyrics deliberately uses the same compact visual weight as the
+   spectrum composition instead of letting the artwork dominate the screen. */
+@media (max-width:820px) and (orientation:portrait) {
+  .immersive-now-playing.mode-lyrics .immersive-stage {
+    grid-template-rows:minmax(140px,.52fr) minmax(0,1.48fr);
+    gap:4px;
+  }
+  .immersive-now-playing.mode-lyrics .immersive-art-perspective,
+  .immersive-now-playing.mode-lyrics.is-split .immersive-art-perspective {
+    width:min(42vh,58vw,420px);
+  }
+  .immersive-now-playing.mode-lyrics .immersive-panel {
+    min-height:0;
+    padding-top:0;
+  }
+  .immersive-now-playing.mode-lyrics .immersive-panel__lyrics {
+    mask-image:linear-gradient(to bottom,transparent 0,#000 6%,#000 91%,transparent 100%);
+  }
+  .immersive-now-playing.mode-lyrics .immersive-lyrics-lines {
+    padding-top:20vh;
+    padding-bottom:44vh;
+  }
+}
+
+@media (max-width:520px) and (orientation:portrait) {
+  .immersive-now-playing.mode-lyrics .immersive-art-perspective,
+  .immersive-now-playing.mode-lyrics.is-split .immersive-art-perspective {
+    width:min(39vh,58vw,360px);
+  }
+  .immersive-now-playing.mode-lyrics .immersive-lyrics-lines p {
+    font-size:clamp(23px,7vw,34px);
+  }
+}

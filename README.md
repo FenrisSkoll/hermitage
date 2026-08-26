@@ -1,4 +1,4 @@
-# Hermitage v0.6.1
+# Hermitage v0.6.2
 
 Hermitage is a modern self-hosted web frontend for Navidrome/OpenSubsonic. It runs separately from Navidrome and communicates with the music server through the Subsonic/OpenSubsonic API.
 
@@ -6,9 +6,9 @@ The interface is built around a desktop music-library workflow: artwork-driven t
 
 Navidrome remains responsible for the library, metadata, accounts, scanning, streaming and transcoding. Hermitage is the client/UI layer.
 
-## v0.6.1 performance changes
+## v0.6.2 performance changes
 
-v0.6.1 is a remote-playback performance and polish release ahead of Community Apps submission.
+v0.6.2 is a remote-playback performance and polish release ahead of Community Apps submission.
 
 - Artwork cache misses now **stream to the browser immediately** instead of waiting for the entire Navidrome image response to buffer in memory first.
 - `X-Accel-Buffering: no` is emitted for artwork responses so reverse proxies such as NGINX Proxy Manager do not hold the first image bytes unnecessarily.
@@ -31,7 +31,7 @@ v0.6.0 introduced single-server deployments, health checks, login rate limiting,
 ```bash
 git clone https://github.com/FenrisSkoll/hermitage.git
 cd hermitage
-docker build -t hermitage:0.6.1 .
+docker build -t hermitage:0.6.2 .
 
 docker run -d \
   --name hermitage \
@@ -43,7 +43,7 @@ docker run -d \
   -e HERMITAGE_ALLOWED_HOSTS=192.168.1.50 \
   -e HERMITAGE_COVER_DISK_CACHE_ITEMS=1200 \
   -v /path/to/hermitage-data:/data \
-  hermitage:0.6.1
+  hermitage:0.6.2
 ```
 
 Open `http://<docker-host>:3001`.
@@ -66,7 +66,7 @@ docker pull ghcr.io/fenrisskoll/hermitage:latest
 or pin a release:
 
 ```bash
-docker pull ghcr.io/fenrisskoll/hermitage:0.6.1
+docker pull ghcr.io/fenrisskoll/hermitage:0.6.2
 ```
 
 See [`docs/PUBLISHING.md`](docs/PUBLISHING.md) for the GitHub/GHCR release process and [`docs/UNRAID.md`](docs/UNRAID.md) for Unraid deployment and Community Apps preparation.

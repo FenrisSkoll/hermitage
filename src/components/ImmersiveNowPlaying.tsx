@@ -304,7 +304,7 @@ export function ImmersiveNowPlaying({
 
   return createPortal(
     <div
-      className={`immersive-now-playing colour-mode-${preferences.colourMode} ${splitMode ? 'is-split' : 'is-art-only'} ${chromeVisible ? 'is-awake' : 'is-idle'} ${visualizerEnabled && player.visualizerReady ? 'has-visualizer' : ''} ${preferences.fullscreenVisualizerDocked ? 'visualizer-docked' : 'visualizer-floating'} ${preferences.fullscreenVisualizerReflection ? 'visualizer-reflection' : ''}`}
+      className={`immersive-now-playing mode-${mode} colour-mode-${preferences.colourMode} ${splitMode ? 'is-split' : 'is-art-only'} ${chromeVisible ? 'is-awake' : 'is-idle'} ${visualizerEnabled && player.visualizerReady ? 'has-visualizer' : ''} ${preferences.fullscreenVisualizerDocked ? 'visualizer-docked' : 'visualizer-floating'} ${preferences.fullscreenVisualizerReflection ? 'visualizer-reflection' : ''}`}
       onPointerMove={tiltArtwork}
       onPointerDown={wakeChrome}
       onPointerLeave={() => { resetTilt(); wakeChrome() }}

@@ -6,7 +6,7 @@ Build Hermitage directly on the NAS:
 
 ```bash
 cd /mnt/user/appdata/hermitage/app
-docker build -t hermitage:0.6.1 .
+docker build -t hermitage:0.6.2 .
 ```
 
 Create persistent data storage:
@@ -33,7 +33,7 @@ docker run -d \
   -e HERMITAGE_ALLOWED_HOSTS=192.168.1.50 \
   -e HERMITAGE_TRUST_PROXY=1 \
   -v /mnt/user/appdata/hermitage/data:/data \
-  hermitage:0.6.1
+  hermitage:0.6.2
 ```
 
 If Hermitage is currently being accessed directly as `http://NAS-IP:3001`, leave `HERMITAGE_SECURE_COOKIES` unset/false. Once it is available exclusively through an HTTPS reverse proxy, recreate the container with:
@@ -64,7 +64,7 @@ You no longer need to build the image on the NAS:
 docker pull ghcr.io/fenrisskoll/hermitage:latest
 ```
 
-Then recreate the container using the GHCR image name instead of `hermitage:0.6.1`.
+Then recreate the container using the GHCR image name instead of `hermitage:0.6.2`.
 
 Your `/mnt/user/appdata/hermitage/data` bind mount remains unchanged, so container replacement does not remove persisted Hermitage sessions.
 

@@ -1,7 +1,7 @@
 services:
   hermitage:
     build: .
-    image: hermitage:0.6.1
+    image: hermitage:0.6.2
     container_name: hermitage
     ports:
       - "3001:3001"

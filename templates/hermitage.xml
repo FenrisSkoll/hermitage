@@ -16,7 +16,7 @@
   <Category>MediaApp:Music</Category>
   <ExtraSearchTerms>navidrome subsonic opensubsonic music player</ExtraSearchTerms>
   <Requires>An existing Navidrome/OpenSubsonic server reachable from the Hermitage container.</Requires>
-  <Changes>v0.6.1: faster remote artwork streaming and persistent/coalesced artwork caching, improved synced-lyrics timing and configurable lyrics offset.</Changes>
+  <Changes>v0.6.2: improved mobile immersive layout and iPhone/PWA viewport handling; portrait Lyrics now uses compact artwork to leave more room for synced lyrics.</Changes>
   <Date>2026-08-25</Date>
   <Beta>true</Beta>
   <License>MIT</License>

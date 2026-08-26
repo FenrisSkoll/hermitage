@@ -100,7 +100,7 @@ export function Sidebar({ mobileOpen = false, onClose }: { mobileOpen?: boolean;
   return (
     <aside className={`sidebar ${mobileOpen ? 'is-mobile-open' : ''}`}>
       <button className="brand brand--button" onClick={goHome} title="Home">
-        <span className="brand__mark">H</span><span>Hermitage</span><small>v0.6.1</small>
+        <span className="brand__mark">H</span><span>Hermitage</span><small>v0.6.2</small>
         <span className="sidebar-close icon-button" onClick={(event) => { event.stopPropagation(); onClose?.() }}><X size={19} /></span>
       </button>
 

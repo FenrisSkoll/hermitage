@@ -474,7 +474,7 @@ if (lockServerUrl && !normalizedDefaultServerUrl) {
 
 app.get('/api/config', (_req, res) => {
   res.json({
-    version: '0.6.1',
+    version: '0.6.2',
     defaultServerUrl: lockServerUrl ? undefined : (normalizedDefaultServerUrl || undefined),
     lockServerUrl,
     secureCookies,
@@ -483,7 +483,7 @@ app.get('/api/config', (_req, res) => {
 })
 
 app.get('/api/health', (_req, res) => {
-  res.json({ ok: true, version: '0.6.1', uptimeSeconds: Math.round(process.uptime()), sessionTtlDays, persistentSessions: true, coverCacheItems: coverCache.size, coverDiskCacheItems: coverDiskEntryCount, coverInflight: coverInflight.size, serverSelection: lockServerUrl ? 'locked' : (normalizedDefaultServerUrl ? 'prefilled' : 'user') })
+  res.json({ ok: true, version: '0.6.2', uptimeSeconds: Math.round(process.uptime()), sessionTtlDays, persistentSessions: true, coverCacheItems: coverCache.size, coverDiskCacheItems: coverDiskEntryCount, coverInflight: coverInflight.size, serverSelection: lockServerUrl ? 'locked' : (normalizedDefaultServerUrl ? 'prefilled' : 'user') })
 })
 
 app.post('/api/login', async (req, res) => {
@@ -813,7 +813,7 @@ app.get('/api/radio/:id', requireMediaSession, async (req, res) => {
       headers: {
         'Accept': 'audio/*,*/*;q=0.8',
         'Accept-Encoding': 'identity',
-        'User-Agent': 'Hermitage/0.6.1'
+        'User-Agent': 'Hermitage/0.6.2'
       },
       signal: abortController.signal
     })
@@ -869,7 +869,7 @@ for (const signal of ['SIGTERM', 'SIGINT']) {
 }
 
 app.listen(port, () => {
-  console.log(`Hermitage v0.6.1 listening on http://0.0.0.0:${port}`)
+  console.log(`Hermitage v0.6.2 listening on http://0.0.0.0:${port}`)
   console.log(`Session persistence: ${sessionsFile} (${sessionTtlDays}-day sliding TTL)`)
   console.log(`Server selection: ${lockServerUrl ? `locked to ${normalizedDefaultServerUrl}` : (normalizedDefaultServerUrl ? `prefilled with ${normalizedDefaultServerUrl}` : 'user supplied')}`)
 })

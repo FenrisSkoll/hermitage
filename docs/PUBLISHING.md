@@ -3,12 +3,12 @@
 The repository includes two workflows:
 
 - `.github/workflows/ci.yml` — validates the application on pushes and pull requests.
-- `.github/workflows/publish.yml` — publishes multi-architecture images to GHCR when a semantic version tag such as `v0.6.1` is pushed.
+- `.github/workflows/publish.yml` — publishes multi-architecture images to GHCR when a semantic version tag such as `v0.6.2` is pushed.
 
 The publish workflow creates:
 
 ```text
-ghcr.io/<github-user>/hermitage:0.6.1
+ghcr.io/<github-user>/hermitage:0.6.2
 ghcr.io/<github-user>/hermitage:0.6
 ghcr.io/<github-user>/hermitage:latest
 ```

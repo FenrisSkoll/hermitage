@@ -10,7 +10,7 @@ export function SettingsPanel({ open, onClose }: { open: boolean; onClose: () =>
   return (
     <div className="settings-scrim" onMouseDown={(event) => { if (event.currentTarget === event.target) onClose() }}>
       <aside className="settings-panel">
-        <div className="settings-heading"><div><span className="eyebrow">Hermitage v0.6.1</span><h2>Settings</h2></div><button className="icon-button" onClick={onClose}><X size={20} /></button></div>
+        <div className="settings-heading"><div><span className="eyebrow">Hermitage v0.6.2</span><h2>Settings</h2></div><button className="icon-button" onClick={onClose}><X size={20} /></button></div>
 
         <div className="settings-section">
           <span className="settings-section__title">Interface</span>
@@ -62,7 +62,7 @@ export function SettingsPanel({ open, onClose }: { open: boolean; onClose: () =>
 
         <div className="settings-section settings-about">
           <span className="settings-section__title">About</span>
-          <div className="settings-about__row"><span><strong>Hermitage</strong><small>Release</small></span><b>v0.6.1</b></div>
+          <div className="settings-about__row"><span><strong>Hermitage</strong><small>Release</small></span><b>v0.6.2</b></div>
           <div className="settings-about__row"><span><strong>Navidrome server</strong><small>Current session</small></span><b>{auth.server || 'Not connected'}</b></div>
           <div className="settings-about__row"><span><strong>User</strong><small>Current session</small></span><b>{auth.username || '—'}</b></div>
           <a className="settings-about__health" href="/api/health" target="_blank" rel="noreferrer">Open health endpoint</a>
