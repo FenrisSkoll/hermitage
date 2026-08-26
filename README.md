@@ -9,13 +9,13 @@ Navidrome remains responsible for the library, metadata, accounts, scanning, str
 ## Screenshots
 
 ### Home
-![Hermitage Home](screenshots/home.png)
+![Hermitage Home](screenshots/home.jpg)
 
 ### Now Playing
-![Hermitage Now Playing](screenshots/now-playing.png)
+![Hermitage Now Playing](screenshots/now-playing.jpg)
 
 ### Fullscreen Spectrum
-![Hermitage fullscreen spectrum](screenshots/fullscreen-spectrum.png)
+![Hermitage fullscreen spectrum](screenshots/fullscreen-spectrum.jpg)
 
 ## v0.6.2 performance changes
 

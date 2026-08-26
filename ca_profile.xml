@@ -4,6 +4,6 @@
 Hermitage is a modern self-hosted web frontend for Navidrome/OpenSubsonic, focused on a polished desktop music-library experience with immersive Now Playing, synced lyrics, artwork-driven themes, queue/playlist management and responsive ultrawide/mobile layouts.
   </Profile>
   <Icon>https://raw.githubusercontent.com/FenrisSkoll/hermitage/main/public/icons/icon-512.png</Icon>
-  <Photo>https://raw.githubusercontent.com/FenrisSkoll/hermitage/main/screenshots/now-playing.png</Photo>
+  <Photo>https://raw.githubusercontent.com/FenrisSkoll/hermitage/main/screenshots/now-playing.jpg</Photo>
   <WebPage>https://github.com/FenrisSkoll/hermitage</WebPage>
 </CommunityApplications>
