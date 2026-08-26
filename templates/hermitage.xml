@@ -7,6 +7,9 @@
   <Shell>bash</Shell>
   <Privileged>false</Privileged>
   <Icon>https://raw.githubusercontent.com/FenrisSkoll/hermitage/main/public/icons/icon-512.png</Icon>
+  <Screenshot>https://raw.githubusercontent.com/FenrisSkoll/hermitage/main/screenshots/home.png</Screenshot>
+  <Screenshot>https://raw.githubusercontent.com/FenrisSkoll/hermitage/main/screenshots/now-playing.png</Screenshot>
+  <Screenshot>https://raw.githubusercontent.com/FenrisSkoll/hermitage/main/screenshots/fullscreen-spectrum.png</Screenshot>
   <WebUI>http://[IP]:[PORT:3001]</WebUI>
   <Overview>Hermitage is a modern Navidrome/OpenSubsonic web client with immersive Now Playing, synced lyrics, live spectrum visualisation, artwork-driven themes, queue and playlist management, responsive ultrawide layouts, PWA support and a desktop-first library interface.</Overview>
   <Support>https://github.com/FenrisSkoll/hermitage/issues</Support>

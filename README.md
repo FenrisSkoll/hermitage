@@ -6,6 +6,17 @@ The interface is built around a desktop music-library workflow: artwork-driven t
 
 Navidrome remains responsible for the library, metadata, accounts, scanning, streaming and transcoding. Hermitage is the client/UI layer.
 
+## Screenshots
+
+### Home
+![Hermitage Home](screenshots/home.png)
+
+### Now Playing
+![Hermitage Now Playing](screenshots/now-playing.png)
+
+### Fullscreen Spectrum
+![Hermitage fullscreen spectrum](screenshots/fullscreen-spectrum.png)
+
 ## v0.6.2 performance changes
 
 v0.6.2 is a remote-playback performance and polish release ahead of Community Apps submission.
